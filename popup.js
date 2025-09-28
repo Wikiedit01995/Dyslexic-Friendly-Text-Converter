@@ -42,3 +42,39 @@ toggleBtn.onclick = async function() {
     }
   });
 };
+
+document.getElementById('focus').onclick = async function() {
+  let [tab] = await chrome.tabs.query({active: true, currentWindow: true});
+  // Toggle focus mode: send a script that toggles a flag on the page
+  chrome.scripting.executeScript({
+    target: {tabId: tab.id},
+    func: () => {
+      // Use a global variable to track focus mode state
+      if (!window.__focusModeOn) {
+        // Hide distractions
+        document.querySelectorAll('img, video, iframe').forEach(el => el.style.display = 'none');
+        document.querySelectorAll('aside, nav, header, footer, .sidebar, .ad, [role="banner"], [role="navigation"], [role="complementary"]').forEach(el => el.style.display = 'none');
+        let main = document.querySelector('main') || document.body;
+        main.style.maxWidth = '800px';
+        main.style.margin = 'auto';
+        main.style.background = '#fafafaff';
+        main.style.boxShadow = '0 0 10px #ccc';
+        window.__focusModeOn = true;
+      } else {
+        // Restore distractions
+        document.querySelectorAll('img, video, iframe').forEach(el => el.style.display = '');
+        document.querySelectorAll('aside, nav, header, footer, .sidebar, .ad, [role="banner"], [role="navigation"], [role="complementary"]').forEach(el => el.style.display = '');
+        let main = document.querySelector('main') || document.body;
+        main.style.maxWidth = '';
+        main.style.margin = '';
+        main.style.background = '';
+        main.style.boxShadow = '';
+        window.__focusModeOn = false;
+      }
+    }
+  });
+
+  // Toggle button text
+  const btn = document.getElementById('focus');
+  btn.textContent = btn.textContent.includes('On') ? 'Focus Mode: Off' : 'Focus Mode: On';
+};
